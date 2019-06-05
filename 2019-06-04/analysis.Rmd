@@ -1,0 +1,207 @@
+---
+title: "Tidy Tuesday 06-04: Ramen"
+output: html_notebook
+---
+
+This is a rough first attempt at a Tidy Tuesday writeup! Starting with June 6th, 2019:
+
+https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-06-04
+
+```{r}
+library(tidyverse)
+library(tidytext)
+ramen_ratings <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-06-04/ramen_ratings.csv")
+colnames(ramen_ratings)
+
+```
+
+```{r}
+head(ramen_ratings)
+```
+
+```{r}
+summary(ramen_ratings)
+```
+
+```{r}
+ramen_ratings %>%
+  ggplot(aes(x=fct_reorder(country, stars, fun=median), y=stars)) + 
+    geom_boxplot() + 
+    coord_flip()
+```
+
+
+
+
+```{r}
+ramen_ratings %>%
+  ggplot(aes(x = fct_reorder(style, stars, fun=median, .desc=TRUE), y=stars)) +
+        geom_boxplot(aes(fill = fct_reorder(style, stars, fun=median, .desc=TRUE))) +
+        # geom_jitter(position=position_jitter(0.2)) +
+        theme_bw(base_size = 14) +
+        xlab("Style") +
+        ylab("Ratings") +
+        scale_fill_discrete(guide = guide_legend(title = "Style"))
+```
+
+```{r}
+ramen_ratings %>%
+  group_by(style) %>%
+  count()
+```
+
+
+```{r}
+
+ramen_cleaner <- ramen_ratings %>%
+  filter(style != "NA" & style != "Bar" & style != "Can" & style != "Restaurant")
+  
+
+ramen_cleaner %>%
+  ggplot(aes(x = stars, fill=style)) +
+        geom_density(alpha=0.3)
+```
+
+Now let's redo box plots excluding low-count styles!
+
+
+```{r}
+
+ramen_cleaner %>%
+  ggplot(aes(x = fct_reorder(style, stars, fun=median, .desc=TRUE), y=stars)) +
+        geom_boxplot(aes(fill = fct_reorder(style, stars, fun=median, .desc=TRUE))) +
+        # geom_jitter(position=position_jitter(0.2)) +
+        theme_bw(base_size = 14) +
+        xlab("Style") +
+        ylab("Ratings") +
+        scale_fill_discrete(guide = guide_legend(title = "Style"))
+        
+```
+
+```{r}
+ramen_ratings %>%
+  group_by(country) %>%
+  count()
+```
+
+```{r}
+ramen_ratings %>%
+  group_by(country) %>%
+  count() %>%
+  filter(n>=20)
+```
+
+```{r}
+ramen_ratings %>%
+  group_by(brand) %>%
+  count() %>%
+  filter(n>10)
+```
+
+```{r}
+ramen_ratings %>%
+  group_by(brand) %>%
+  count() %>%
+  ggplot(aes(x=n)) +
+  geom_density()
+```
+
+
+Here we can do some neat text stuff!
+
+
+```{r}
+all_words_in_variety <- ramen_ratings %>%
+  unnest_tokens(word, variety) %>%
+  select(word)
+
+words_sorted <- all_words_in_variety %>%
+  group_by(word) %>%
+  count() %>%
+  arrange(desc(n))
+
+words_sorted
+
+all_words_in_variety
+
+```
+
+```{r}
+words_sorted %>%
+  ggplot(aes(x=n)) +
+  geom_density()
+```
+
+```{r}
+ramen_ratings <- ramen_ratings %>%
+  mutate(variety = tolower(variety)) %>%
+  mutate(meat = case_when(
+    grepl("chicken", variety) ~ "chicken",
+    grepl("beef", variety) ~ "beef",
+    grepl("pork", variety) ~ "pork",
+    grepl("shrimp", variety) ~ "shrimp",
+    grepl("seafood", variety) ~ "seafood"))
+
+ramen_ratings %>%
+  group_by(meat) %>%
+  count()
+```
+
+```{r}
+ramen_ratings %>%
+  filter(!is.na(meat)) %>%
+  ggplot(aes(x = fct_reorder(meat, stars, fun=median, .desc=TRUE), y=stars)) +
+        geom_boxplot(aes(fill = fct_reorder(meat, stars, fun=median, .desc=TRUE))) +
+        # geom_jitter(position=position_jitter(0.2)) +
+        theme_bw(base_size = 14) +
+        xlab("Meat") +
+        ylab("Ratings") +
+        scale_fill_discrete(guide = guide_legend(title = "Meat"))
+```
+
+
+
+```{r}
+ramen_ratings %>%
+  filter(!is.na(meat)) %>%
+  ggplot(aes(x = stars, fill=meat)) +
+        geom_density(alpha=0.3)
+```
+```{r}
+ramen_ratings <- ramen_ratings %>%
+  mutate(variety = tolower(variety)) %>%
+  mutate(is_spicy = grepl("spicy", variety))
+```
+
+```{r}
+ramen_ratings %>%
+  ggplot(aes(x = stars, fill=is_spicy)) +
+        geom_density(alpha=0.3)
+```
+```{r}
+ramen_ratings <- ramen_ratings %>%
+  mutate(variety = tolower(variety)) %>%
+  mutate(is_curry = grepl("curry", variety))
+```
+
+```{r}
+ramen_ratings %>%
+  ggplot(aes(x = stars, fill=is_curry)) +
+        geom_density(alpha=0.3) +
+        theme_bw(base_size = 12) +
+        xlab("Rating (out of 5)") +
+        ylab("Density") +
+        scale_fill_discrete(guide = guide_legend(title = "Curry?"))
+```
+```{r}
+ramen_ratings %>%
+  group_by(is_spicy) %>%
+  count()
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
