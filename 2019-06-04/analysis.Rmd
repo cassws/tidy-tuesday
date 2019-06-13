@@ -1,19 +1,22 @@
 ---
-title: "Tidy Tuesday 06-04: Ramen"
-output: html_notebook
+title: 'Tidy Tuesday 06-04: Ramen'
+output:
+  html_document:
+    df_print: paged
 ---
 
 This is a rough first attempt at a Tidy Tuesday writeup! Starting with June 6th, 2019:
 
 https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-06-04
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(tidytext)
 ramen_ratings <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-06-04/ramen_ratings.csv")
 colnames(ramen_ratings)
 
 ```
+First, I used head() and summary() to get a quick sense of what this data looks like:
 
 ```{r}
 head(ramen_ratings)
@@ -23,14 +26,18 @@ head(ramen_ratings)
 summary(ramen_ratings)
 ```
 
-```{r}
+The first question that jumped out at me: how do the median ratings (and distribution of ratings) differ between countries? What is best and worst country for ramen? A horizontal box plot seems like a good way to get started:
+
+```{r warning=FALSE}
 ramen_ratings %>%
   ggplot(aes(x=fct_reorder(country, stars, fun=median), y=stars)) + 
     geom_boxplot() + 
     coord_flip()
 ```
 
+Here I noticed some strange behaviors -- in particular, take a look at the highest-ranked countries. It appears that United States is both first-ranked and, somehow, has a lower median rating than Japan! How is that? After poking around, I realized that the "fun=median" parameter passed into ggplot2's did not identify outliers, whereas ggplot2's boxplot geom identifies outliers and generates the 25th-50th-75th percentile box excluding those outliers. How could we get "fun=median" to behave similarly?
 
+For the time being, I proceeded to visualizing by style (and noticed the same median ranking issue yet again!)
 
 
 ```{r}
@@ -43,6 +50,7 @@ ramen_ratings %>%
         ylab("Ratings") +
         scale_fill_discrete(guide = guide_legend(title = "Style"))
 ```
+The lack of a box for Can made me realize, oh wait, is there only one observation with a Can style in our dataset? Can we do some simple low-pass filtering to get more focused data? Sure enough:
 
 ```{r}
 ramen_ratings %>%
@@ -50,6 +58,7 @@ ramen_ratings %>%
   count()
 ```
 
+For simplicity's sake, I decided to exclude Bar, Can, and Restaurant, as well as ramen with Null Style values. I wanted to compare these newly simplified distributions, and sure enough, take a look at the disparity between Box and Cup ramen!:
 
 ```{r}
 
@@ -62,7 +71,7 @@ ramen_cleaner %>%
         geom_density(alpha=0.3)
 ```
 
-Now let's redo box plots excluding low-count styles!
+Now let's redo box plots excluding low-count styles:
 
 
 ```{r}
@@ -77,37 +86,9 @@ ramen_cleaner %>%
         scale_fill_discrete(guide = guide_legend(title = "Style"))
         
 ```
+## Part Two: Text Analysis
 
-```{r}
-ramen_ratings %>%
-  group_by(country) %>%
-  count()
-```
-
-```{r}
-ramen_ratings %>%
-  group_by(country) %>%
-  count() %>%
-  filter(n>=20)
-```
-
-```{r}
-ramen_ratings %>%
-  group_by(brand) %>%
-  count() %>%
-  filter(n>10)
-```
-
-```{r}
-ramen_ratings %>%
-  group_by(brand) %>%
-  count() %>%
-  ggplot(aes(x=n)) +
-  geom_density()
-```
-
-
-Here we can do some neat text stuff!
+After poking around other Tidy Tuesday projects, I noticed that there were some interesting things happening in that unstructured "brand" text variable:
 
 
 ```{r}
@@ -122,15 +103,17 @@ words_sorted <- all_words_in_variety %>%
 
 words_sorted
 
-all_words_in_variety
-
 ```
+
+A quick densit plot reveals that most brand words are relatively unique across all observations:
 
 ```{r}
 words_sorted %>%
   ggplot(aes(x=n)) +
   geom_density()
 ```
+
+I decided to extract meat type (I term this "variety"). To do this, I use the grepl() search, which checks to see if a substring exists within a string. Combined with case_when() and mutate(), I can generate the appropriate value for our new "variety" variable based on the result of these substring searches:
 
 ```{r}
 ramen_ratings <- ramen_ratings %>%
@@ -159,7 +142,7 @@ ramen_ratings %>%
         scale_fill_discrete(guide = guide_legend(title = "Meat"))
 ```
 
-
+I waas actually quite surprised by the similarity across meat types! Perhaps the biggest difference is that pork has the widest interquartile range -- which suggests that pork is the riskiest bet when picking up some random ramen! Sure enough: 
 
 ```{r}
 ramen_ratings %>%
@@ -167,24 +150,30 @@ ramen_ratings %>%
   ggplot(aes(x = stars, fill=meat)) +
         geom_density(alpha=0.3)
 ```
+
+I repeated the process for "spicy", which I generated as a boolean variable based on the same substring grepl() search method:
+
 ```{r}
 ramen_ratings <- ramen_ratings %>%
   mutate(variety = tolower(variety)) %>%
   mutate(is_spicy = grepl("spicy", variety))
 ```
 
-```{r}
+```{r warning=FALSE}
 ramen_ratings %>%
   ggplot(aes(x = stars, fill=is_spicy)) +
         geom_density(alpha=0.3)
 ```
+
+Really not much of a difference! As my last technique, I repeated this approach for curry:
+
 ```{r}
 ramen_ratings <- ramen_ratings %>%
   mutate(variety = tolower(variety)) %>%
   mutate(is_curry = grepl("curry", variety))
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 ramen_ratings %>%
   ggplot(aes(x = stars, fill=is_curry)) +
         geom_density(alpha=0.3) +
@@ -193,15 +182,12 @@ ramen_ratings %>%
         ylab("Density") +
         scale_fill_discrete(guide = guide_legend(title = "Curry?"))
 ```
+
+Ah ha! I was very pleased to see that yes, it appears curry brands consistently rate higher than non-curry brands. Very happy to see this result. And here are the numbers per class, for reference:
+
 ```{r}
 ramen_ratings %>%
   group_by(is_spicy) %>%
   count()
 ```
-
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
 
