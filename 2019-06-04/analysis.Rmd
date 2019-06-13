@@ -1,8 +1,6 @@
 ---
 title: 'Tidy Tuesday 06-04: Ramen'
-output:
-  html_document:
-    df_print: paged
+output: html_notebook
 ---
 
 This is a rough first attempt at a Tidy Tuesday writeup! Starting with June 6th, 2019:
