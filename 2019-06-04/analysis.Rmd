@@ -1,6 +1,6 @@
 ---
 title: 'Tidy Tuesday 06-04: Ramen'
-output: html_notebook
+output: rmarkdown::github_document
 ---
 
 This is a rough first attempt at a Tidy Tuesday writeup! Starting with June 6th, 2019:
