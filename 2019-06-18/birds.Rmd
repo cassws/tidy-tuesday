@@ -1,0 +1,170 @@
+---
+title: "Christmas Birds"
+author: "Zoë Wilkinson Saldaña"
+date: "6/18/2019"
+output: rmarkdown::github_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+This is a rough first draft at a Tidy Tuesday writeup! Starting with June 18th, 2019:
+
+https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-06-18
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(tidytext)
+bird_counts <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-06-18/bird_counts.csv")
+```
+
+```{r}
+head(bird_counts)
+```
+```{r}
+tail(bird_counts)
+```
+
+```{r}
+bird_counts %>%
+  ggplot(aes(x=reorder(species, -how_many_counted), y=how_many_counted)) +
+  geom_bar(stat="identity")
+
+```
+
+```{r}
+
+major_birds <- bird_counts %>%
+  filter(how_many_counted >= 100)
+
+major_birds %>%
+  ggplot(aes(x=reorder(species, -how_many_counted), y=how_many_counted)) +
+  geom_bar(stat="identity")
+
+```
+
+
+```{r}
+# duplicated(bird_counts$species)
+
+bird_counts %>% 
+  group_by(species) %>% 
+  filter(n()>1) %>%
+  summarise(count=n())
+
+
+```
+```{r}
+# duplicated(bird_counts$species)
+
+all_time_counts <- bird_counts %>% 
+  group_by(species) %>% 
+  summarise(all_years_count=sum(how_many_counted))
+
+
+all_time_counts
+```
+
+```{r}
+all_time_counts %>%
+  ggplot(aes(x=reorder(species, -all_years_count), y=all_years_count)) +
+  geom_bar(stat="identity")
+```
+
+```{r}
+top_birds <- all_time_counts %>%
+  filter(all_years_count >= 100000)
+```
+
+
+```{r}
+bird_counts %>%
+  filter(species %in% top_birds$species) %>%
+  filter(year >= 1950) %>%
+  ggplot(aes(x=year, y=how_many_counted_by_hour, colour = species)) +
+  theme_bw(base_size = 12) +
+  geom_point()
+```
+
+```{r}
+rare_birds <- all_time_counts %>%
+  filter(all_years_count < 1000 & all_years_count > 200)
+
+bird_counts %>%
+  filter(species %in% rare_birds$species) %>%
+  filter(year >= 1950) %>%
+  ggplot(aes(x=year, y=how_many_counted_by_hour, colour = species)) +
+  theme_bw() +
+  geom_line()
+```
+
+```{r}
+bird_counts %>%
+  filter(species %in% rare_birds$species) %>%
+  filter(year >= 1950) %>%
+  ggplot(aes(x=year, y=how_many_counted_by_hour, colour = species)) +
+  theme_bw() +
+  geom_point() +
+  geom_text(size=3, aes(label=ifelse(how_many_counted_by_hour>0.4,as.character(species),'')),hjust=-0.1,vjust=0)
+
+```
+
+
+
+```{r}
+bird_counts %>%
+  filter(year >= 1950) %>%
+  ggplot(aes(x=year, y=how_many_counted_by_hour)) +
+  theme_bw(base_size = 12) +
+  geom_point()
+```
+
+```{r}
+bird_counts %>%
+  filter(grepl('Owl', species)) %>%
+  filter(year >= 1950) %>%
+  ggplot(aes(x=year, y=how_many_counted_by_hour, colour=species)) +
+  theme_bw(base_size = 12) +
+  geom_line()
+```
+
+```{r}
+bird_counts %>%
+  filter(grepl('Owl', species)) %>%
+  filter(year >= 1950) %>%
+  ggplot(aes(x=year, y=how_many_counted_by_hour, colour=species)) +
+  theme_bw(base_size = 12) +
+  geom_point() +
+  geom_text(size=3, aes(label=ifelse(how_many_counted_by_hour>0.15,as.character(species),'')),hjust=-0.1,vjust=0) +
+  geom_line(alpha=0.3) +
+  labs(title="Sightings of Owls in Hamilton, Ontario", x= "year", y ="sightings per person-hour observed")
+
+```
+
+```{r}
+bird_counts %>%
+  filter(year > 1950) %>%
+  filter(species %in% c('Long-eared Owl', 'Short-eared Owl', 'Great Horned Owl', 'Eastern Screech Owl')) %>%
+  ggplot(aes(x=year, y=how_many_counted_by_hour, colour=species)) +
+  theme_bw(base_size = 12) +
+  geom_line(alpha=0.8)
+
+```
+
+
+```{r}
+bird_counts %>%
+  ggplot(aes(x=year, y=how_many_counted)) +
+  geom_col()
+```
+
+```{r}
+bird_counts %>%
+  filter(species %in% rare_birds$species) %>%
+  ggplot(aes(x=year, y=how_many_counted)) +
+  geom_point()
+```
+
