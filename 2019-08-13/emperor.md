@@ -96,12 +96,14 @@ emperors_bar %>%
 
 ``` r
 emperors %>%
-  group_by(birth_cty, assassinated) %>%
+  group_by(birth_prv, assassinated) %>%
   tally() %>%
-  ggplot(aes(x=birth_cty, y=n, fill=assassinated)) +
+  ggplot(aes(x=birth_prv, y=n, fill=assassinated)) +
   geom_bar(stat="identity") +
   scale_fill_manual(values= c("#333745", "#E63462")) + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  xlab('birth province') +
+  ylab('# of emperors')
 ```
 
 ![](emperor_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
