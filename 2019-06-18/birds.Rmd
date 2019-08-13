@@ -98,7 +98,9 @@ bird_counts %>%
   filter(year >= 1950) %>%
   ggplot(aes(x=year, y=how_many_counted_by_hour, colour = species)) +
   theme_bw() +
-  geom_line()
+  geom_line() + 
+  geom_text(size=3, aes(label=ifelse(how_many_counted_by_hour>1,as.character(species),'')),hjust=-0.1,vjust=0)
+
 ```
 
 ```{r}
@@ -152,6 +154,12 @@ bird_counts %>%
   theme_bw(base_size = 12) +
   geom_line(alpha=0.8)
 
+```
+
+```{r}
+bird_counts %>%
+  filter(year > 1950) %>%
+  filter(species %in% c('Long-eared Owl', 'Short-eared Owl', 'Great Horned Owl', 'Eastern Screech Owl'))
 ```
 
 

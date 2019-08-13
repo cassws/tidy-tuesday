@@ -147,7 +147,8 @@ bird_counts %>%
   filter(year >= 1950) %>%
   ggplot(aes(x=year, y=how_many_counted_by_hour, colour = species)) +
   theme_bw() +
-  geom_line()
+  geom_line() + 
+  geom_text(size=3, aes(label=ifelse(how_many_counted_by_hour>1,as.character(species),'')),hjust=-0.1,vjust=0)
 ```
 
 ![](birds_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
@@ -212,11 +213,33 @@ bird_counts %>%
 
 ``` r
 bird_counts %>%
+  filter(year > 1950) %>%
+  filter(species %in% c('Long-eared Owl', 'Short-eared Owl', 'Great Horned Owl', 'Eastern Screech Owl'))
+```
+
+    ## # A tibble: 201 x 6
+    ##     year species          species_latin    how_many_counted total_hours
+    ##    <int> <chr>            <chr>                       <int>       <int>
+    ##  1  1951 Great Horned Owl Bubo virginianus                4         103
+    ##  2  1951 Long-eared Owl   Asio otus                       1         103
+    ##  3  1951 Short-eared Owl  Asio flammeus                   0         103
+    ##  4  1952 Great Horned Owl Bubo virginianus                7         133
+    ##  5  1952 Long-eared Owl   Asio otus                       1         133
+    ##  6  1952 Short-eared Owl  Asio flammeus                   0         133
+    ##  7  1953 Great Horned Owl Bubo virginianus                3         134
+    ##  8  1953 Long-eared Owl   Asio otus                       4         134
+    ##  9  1953 Short-eared Owl  Asio flammeus                   1         134
+    ## 10  1954 Great Horned Owl Bubo virginianus                7         133
+    ## # ... with 191 more rows, and 1 more variable:
+    ## #   how_many_counted_by_hour <dbl>
+
+``` r
+bird_counts %>%
   ggplot(aes(x=year, y=how_many_counted)) +
   geom_col()
 ```
 
-![](birds_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](birds_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ``` r
 bird_counts %>%
@@ -225,4 +248,4 @@ bird_counts %>%
   geom_point()
 ```
 
-![](birds_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](birds_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->

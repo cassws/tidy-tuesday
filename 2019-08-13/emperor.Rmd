@@ -1,0 +1,113 @@
+---
+title: "Emperors"
+author: "Zoë Wilkinson Saldaña"
+date: "8/13/2019"
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Tidy Tuesday for 2019-08-13: Roman Emperors
+
+This is a rough draft based on the following data:
+
+https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-08-13
+
+Focusing on the theme of **assassinations**.
+
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(scales)
+library(corrr)
+library(GGally)
+library(lubridate)
+emperors <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-08-13/emperors.csv")
+```
+
+```{r}
+head(emperors)
+```
+```{r}
+emperors %>%
+  select(cause) %>%
+  unique()
+```
+
+```{r}
+emperors <- emperors %>%
+  mutate(assassinated = (cause == "Assassination"))
+         
+emperors %>%
+  group_by(assassinated) %>%
+  tally()
+```
+
+```{r}
+# View(emperors)
+```
+
+```{r}
+
+cols <- hue_pal()(4)
+
+orderlist = c("Julio-Claudian", "Flavian", "Nerva-Antonine",
+               "Severan", "Gordian", "Constantinian", "Valentinian", "Theodosian") 
+
+emperors_bar <- emperors %>%
+  transform(dynasty = factor(dynasty, levels = orderlist)) 
+
+emperors_bar %>%
+  group_by(dynasty, assassinated) %>%
+  tally() %>%
+  ggplot(aes(x=dynasty, y=n, fill=assassinated)) +
+  geom_bar(stat="identity") +
+  scale_fill_manual(values= c("#333745", "#E63462")) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+```{r}
+
+
+
+emperors %>%
+  group_by(birth_cty, assassinated) %>%
+  tally() %>%
+  ggplot(aes(x=birth_cty, y=n, fill=assassinated)) +
+  geom_bar(stat="identity") +
+  scale_fill_manual(values= c("#333745", "#E63462")) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+```{r warning=FALSE}
+
+emperors <- emperors %>%
+  mutate(age=interval(birth, death) / years(1))
+
+# clumsy age repacement
+# done manually here
+
+emperors <- emperors %>%
+  mutate(age=replace(age, name=="Augustus", 76)) %>%
+  mutate(age=replace(age, name=="Tiberius", 51)) %>%
+  mutate(age=replace(age, name=="Caligula", 53)) %>%
+  mutate(age=replace(age, name=="Claudius", 63))
+
+
+
+# View(emperors)
+
+# historgram of age at death, binned by decade
+
+emperors %>%
+  ggplot(aes(age, fill = assassinated)) +
+  geom_histogram(binwidth = 10, center = 4) +
+  scale_fill_manual(values= c("#333745", "#E63462")) +
+  xlab('age at death (by decade)') +
+  ylab('# of emperors')
+```
+
+
