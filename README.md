@@ -1,5 +1,5 @@
 # tidy-tuesday
-Analysis of messy #TidyTuesday datasets using R + tidyverse
+Analysis of messy #TidyTuesday datasets using R + tidyverse, summer 2019
 
 Explore each folder to find my analysis of the weekly [#TidyTuesday dataset](https://github.com/rfordatascience/tidytuesday)
 
